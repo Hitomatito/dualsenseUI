@@ -11,6 +11,11 @@ finish-args:
   - --device=all
   - --filesystem=host-os
 
+cleanup:
+  - /include
+  - /lib/*.a
+  - /lib/pkgconfig
+
 modules:
   - name: libhidapi
     buildsystem: cmake-ninja
@@ -33,19 +38,12 @@ modules:
         url: https://github.com/nowrep/dualsensectl/archive/v0.7.tar.gz
         sha256: a615304596925738b12d0a499f31e1fe0cc3653da230edfe7c68637098ce6b72
 
-  - name: python-deps
-    buildsystem: simple
+  - name: dualsense-ui
     build-options:
       no-network: false
-    build-commands:
-      - python3 -m pip install --prefix=${FLATPAK_DEST} --no-build-isolation evdev hidapi
-    sources:
-      - type: file
-        path: /dev/null
-
-  - name: dualsense-ui
     buildsystem: simple
     build-commands:
+      - python3 -m pip install --prefix=/app --no-build-isolation evdev hidapi
       - python3 -m pip install --prefix=/app --no-build-isolation --no-deps .
       - install -Dm644 data/com.dualsenseui.app.desktop /app/share/applications/com.dualsenseui.app.desktop
       - install -Dm644 data/icons/com.dualsenseui.svg /app/share/icons/hicolor/scalable/apps/com.dualsenseui.svg

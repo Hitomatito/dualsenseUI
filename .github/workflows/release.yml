@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Build .deb manually
+      - name: Build .deb
         run: |
           set -ex
           VERSION=${GITHUB_REF_NAME#v}
           PKG=dualsense-ui_${VERSION}-1_all
           DEST=/tmp/$PKG
           mkdir -p $DEST/DEBIAN
-          python3 -m pip install --root=$DEST --prefix=/usr . 2>&1
+          python3 -m pip install --root=$DEST --prefix=/usr .
           install -Dm644 data/com.dualsenseui.app.desktop $DEST/usr/share/applications/com.dualsenseui.app.desktop
           install -Dm644 data/icons/com.dualsenseui.svg $DEST/usr/share/icons/hicolor/scalable/apps/com.dualsenseui.svg
           install -Dm644 data/icons/usb-symbolic.svg $DEST/usr/share/icons/hicolor/symbolic/devices/usb-symbolic.svg
@@ -35,7 +35,6 @@ jobs:
           EOF
           dpkg-deb --build --root-owner-group $DEST
           cp /tmp/${PKG}.deb .
-          ls -la *.deb
       - uses: actions/upload-artifact@v4
         with:
           name: deb-packages
@@ -47,8 +46,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install deps
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq rpm python3-setuptools python3-evdev
+          sudo apt-get update
+          sudo apt-get install -y rpm python3-setuptools python3-evdev
       - name: Build .rpm
         run: |
           set -ex
@@ -61,8 +60,15 @@ jobs:
           cp /tmp/dualsense-ui-${VERSION}.tar.gz rpmbuild/SOURCES/
           rpmbuild -ba dualsense-ui.spec \
             --define "_topdir $(pwd)/rpmbuild" \
-            --define "version ${VERSION}"
-          find rpmbuild -name '*.rpm'
+            --define "version ${VERSION}" > /tmp/rpmbuild.log 2>&1; rc=$?
+          tail -50 /tmp/rpmbuild.log
+          find rpmbuild -name '*.rpm' >> /tmp/rpmbuild.log
+          exit $rc
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-logs
+          path: /tmp/rpmbuild.log
       - uses: actions/upload-artifact@v4
         with:
           name: rpm-packages
@@ -75,12 +81,16 @@ jobs:
       - name: Build Flatpak
         run: |
           set -ex
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq flatpak flatpak-builder
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak-builder --user --force-clean --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml
-          flatpak build-bundle build-dir dualsense-ui.flatpak com.dualsenseui.app
-          ls -la dualsense-ui.flatpak
+          flatpak-builder --user --force-clean --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml 2>&1 | tee /tmp/flatpak.log
+          flatpak build-bundle build-dir dualsense-ui.flatpak com.dualsenseui.app >> /tmp/flatpak.log 2>&1
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-logs
+          path: /tmp/flatpak.log
       - uses: actions/upload-artifact@v4
         with:
           name: flatpak
@@ -93,7 +103,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/download-artifact@v4
-      - run: ls -la deb-packages/ rpm-packages/ flatpak/
       - uses: softprops/action-gh-release@v2
         with:
           files: |
