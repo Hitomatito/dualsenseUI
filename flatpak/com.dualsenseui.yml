@@ -11,11 +11,6 @@ finish-args:
   - --device=all
   - --filesystem=host-os
 
-cleanup:
-  - /include
-  - /lib/*.a
-  - /lib/pkgconfig
-
 modules:
   - name: libhidapi
     buildsystem: cmake-ninja
