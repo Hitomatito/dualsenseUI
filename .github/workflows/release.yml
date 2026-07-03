@@ -63,7 +63,9 @@ jobs:
           cp /tmp/dualsense-ui-${VERSION}.tar.gz rpmbuild/SOURCES/
           rpmbuild -ba dualsense-ui.spec \
             --define "_topdir $(pwd)/rpmbuild" \
-            --define "version ${VERSION}"
+            --define "version ${VERSION}" \
+            --define "python3_sitelib /usr/lib/python3/dist-packages" \
+            --nodeps
           find rpmbuild -name '*.rpm'
       - uses: actions/upload-artifact@v4
         with:

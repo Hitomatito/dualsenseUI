@@ -10,7 +10,6 @@ URL:           https://github.com/Hitomatito/dualsenseUI
 Source0:       %{appname}-%{version}.tar.gz
 
 BuildArch:     noarch
-BuildRequires: python3-devel
 BuildRequires: python3-setuptools
 
 Requires:      python3-gobject
@@ -67,10 +66,17 @@ python3 -m pytest tests/ -v --tb=short || :
 %license LICENSE
 %{_bindir}/dualsense-ui
 %{python3_sitelib}/dualsense_ui/
+%dir %{_datadir}/applications/
 %{_datadir}/applications/com.dualsenseui.app.desktop
+%dir %{_datadir}/icons/hicolor/scalable/apps/
 %{_datadir}/icons/hicolor/scalable/apps/com.dualsenseui.svg
+%dir %{_datadir}/icons/hicolor/symbolic/devices/
 %{_datadir}/icons/hicolor/symbolic/devices/usb-symbolic.svg
-%{_datadir}/dualsense-ui/
+%dir %{_datadir}/dualsense-ui/
+%dir %{_datadir}/dualsense-ui/icons/
+%{_datadir}/dualsense-ui/style.css
+%{_datadir}/dualsense-ui/icons/com.dualsenseui.svg
+%{_datadir}/dualsense-ui/icons/usb-symbolic.svg
 
 %changelog
 * Thu Jul 02 2026 DualSense UI Contributors - 1.0.0-1
