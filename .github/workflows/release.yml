@@ -10,11 +10,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential devscripts debhelper dh-python \
+            python3-all python3-setuptools dpkg-dev
       - name: Build .deb
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq build-essential devscripts debhelper dh-python python3-all python3-setuptools
           dpkg-buildpackage -us -uc -b
+          ls -la ../*.deb
       - uses: actions/upload-artifact@v4
         with:
           name: deb-packages
@@ -23,12 +27,14 @@ jobs:
   rpm:
     runs-on: ubuntu-24.04
     container:
-      image: fedora:latest
+      image: fedora:41
     steps:
       - uses: actions/checkout@v4
+      - name: Install deps
+        run: |
+          dnf install -y git rpm-build python3-setuptools python3-devel
       - name: Build .rpm
         run: |
-          dnf install -y rpm-build python3-setuptools python3-devel 'python3dist(pygobject)' 'python3dist(hidapi)' 'python3dist(evdev)'
           VERSION=${GITHUB_REF_NAME#v}
           tar czf /tmp/dualsense-ui-${VERSION}.tar.gz \
             --transform "s,^,dualsense-ui-${VERSION}/," \
@@ -39,6 +45,7 @@ jobs:
           rpmbuild -ba dualsense-ui.spec \
             --define "_topdir $(pwd)/rpmbuild" \
             --define "version ${VERSION}"
+          find rpmbuild -name '*.rpm'
       - uses: actions/upload-artifact@v4
         with:
           name: rpm-packages
@@ -50,13 +57,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install flatpak-builder
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq flatpak-builder
+          sudo apt-get update
+          sudo apt-get install -y flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
       - name: Build Flatpak
         run: |
           flatpak-builder --user --force-clean --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml
           flatpak build-bundle build-dir dualsense-ui.flatpak com.dualsenseui.app
+          ls -la dualsense-ui.flatpak
       - uses: actions/upload-artifact@v4
         with:
           name: flatpak
@@ -69,8 +77,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/download-artifact@v4
-      - name: Create release
-        uses: softprops/action-gh-release@v2
+      - run: ls -la deb-packages/ rpm-packages/ flatpak/
+      - uses: softprops/action-gh-release@v2
         with:
           files: |
             deb-packages/*.deb
