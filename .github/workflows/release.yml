@@ -84,6 +84,7 @@ jobs:
       - name: Build Flatpak
         run: |
           set -ex
+          flatpak install --user -y flathub org.gnome.Platform//49 org.gnome.Sdk//49 2>&1 | tail -5
           flatpak-builder --user --force-clean --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml > /tmp/flatpak.log 2>&1
           flatpak build-bundle build-dir dualsense-ui.flatpak com.dualsenseui.app
           ls -la dualsense-ui.flatpak
