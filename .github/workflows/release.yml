@@ -81,11 +81,18 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq flatpak flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
       - name: Build Flatpak
         run: |
-          set -ex
-          flatpak update --user --appstream 2>&1 | tail -3 || true
+          echo "=== Checking flatpak setup ==="
+          flatpak --version
+          flatpak-builder --version
+          flatpak remotes --user
+          echo "=== Trying flatpak install ==="
+          flatpak install --user --noninteractive flathub org.gnome.Platform//49 org.gnome.Sdk//49 2>&1 || echo "Install skipped/maybe already present"
+          echo "=== Running flatpak-builder ==="
           flatpak-builder --user --force-clean --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml 2>&1 | tee /tmp/flatpak.log; rc=${PIPESTATUS[0]}
+          echo "flatpak-builder exit code: $rc"
           if [ $rc -ne 0 ]; then exit $rc; fi
           flatpak build-bundle build-dir dualsense-ui.flatpak com.dualsenseui.app
           ls -la dualsense-ui.flatpak
