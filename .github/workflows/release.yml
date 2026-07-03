@@ -42,15 +42,14 @@ jobs:
 
   rpm:
     runs-on: ubuntu-24.04
+    container:
+      image: fedora:41
     steps:
       - uses: actions/checkout@v4
-      - name: Install deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq rpm python3-setuptools
       - name: Build .rpm
         run: |
           set -ex
+          dnf install -y -q rpm-build python3-setuptools 'python3dist(pygobject)' git
           VERSION=${GITHUB_REF_NAME#v}
           tar czf /tmp/dualsense-ui-${VERSION}.tar.gz \
             --transform "s,^,dualsense-ui-${VERSION}/," \
@@ -71,15 +70,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install flatpak-builder
+      - name: Setup
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq flatpak flatpak-builder
-      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
-        with:
-          bundle: dualsense-ui.flatpak
-          manifest-path: flatpak/com.dualsenseui.yml
-          cache-key: flatpak-${{ github.sha }}
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+      - name: Build Flatpak
+        run: |
+          flatpak-builder --user --force-clean --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml 2>&1
+          flatpak build-bundle build-dir dualsense-ui.flatpak com.dualsenseui.app
+          ls -la dualsense-ui.flatpak
       - uses: actions/upload-artifact@v4
         with:
           name: flatpak
