@@ -21,12 +21,17 @@ jobs:
       - name: Install system deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgirepository1.0-dev libhidapi-dev
+          sudo apt-get install -y \
+            libcairo2-dev \
+            pkg-config \
+            libgirepository1.0-dev \
+            libhidapi-dev
 
       - name: Install Python deps
         run: |
+          pip install -U pip
           pip install pytest pytest-mock
-          pip install pygobject hidapi evdev
+          pip install -r requirements.txt
 
       - name: Run tests
         run: |
