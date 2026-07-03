@@ -3,6 +3,7 @@
 Graphical interface for configuring and monitoring PlayStation DualSense and DualSense Edge controllers on Linux.
 
 ![CI](https://github.com/Hitomatito/dualsenseUI/actions/workflows/ci.yml/badge.svg)
+[![Flatpak](https://github.com/Hitomatito/dualsenseUI/actions/workflows/release.yml/badge.svg)](https://github.com/Hitomatito/dualsenseUI/releases)
 
 ## Features
 

@@ -9,12 +9,23 @@ finish-args:
   - --socket=wayland
   - --share=ipc
   - --device=all
+  - --filesystem=host-os
 
 build-options:
   env:
-    - FLATPAK_DEST=/app
+    FLATPAK_DEST: /app
 
 modules:
+  - name: libhidapi
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+    sources:
+      - type: archive
+        url: https://github.com/libusb/hidapi/archive/hidapi-0.14.0.tar.gz
+        sha256: a57141241ee8e9537af3dd32d978b27086866d101344bfae7e2955b9cc6f7108
+
   - name: dualsensectl
     buildsystem: simple
     build-commands:
