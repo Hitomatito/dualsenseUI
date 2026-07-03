@@ -35,10 +35,10 @@ Features:
 %setup -q -n %{name}-%{version}
 
 %build
-python3 setup.py build
+python3 -m pip install --no-build-isolation --no-deps .
 
 %install
-python3 setup.py install --prefix=%{_prefix} --root=%{buildroot}
+python3 -m pip install --no-build-isolation --no-deps --prefix=%{_prefix} --root=%{buildroot} .
 # Desktop file
 install -Dm644 data/com.dualsenseui.app.desktop \
   %{buildroot}%{_datadir}/applications/com.dualsenseui.app.desktop
