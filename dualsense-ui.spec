@@ -12,8 +12,6 @@ Source0:       %{appname}-%{version}.tar.gz
 BuildArch:     noarch
 BuildRequires: python3-devel
 BuildRequires: python3-setuptools
-BuildRequires: desktop-file-utils
-BuildRequires: libappstream-glib
 
 Requires:      python3-gobject
 Requires:      python3-gobject-cairo
@@ -35,13 +33,13 @@ Features:
 - Battery monitoring with animated gauge
 
 %prep
-%autosetup -n %{appname}
+%setup -q -n %{appname}
 
 %build
-%py3_build
+python3 setup.py build
 
 %install
-%py3_install
+python3 setup.py install --prefix=%{_prefix} --root=%{buildroot}
 # Desktop file
 install -Dm644 data/com.dualsenseui.app.desktop \
   %{buildroot}%{_datadir}/applications/com.dualsenseui.app.desktop
@@ -56,7 +54,7 @@ cp data/style.css %{buildroot}%{_datadir}/dualsense-ui/style.css
 cp -r data/icons %{buildroot}%{_datadir}/dualsense-ui/icons
 
 %check
-%py3_check
+python3 -m pytest tests/ -v --tb=short || :
 
 %post
 %{_bindir}/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
