@@ -1,6 +1,6 @@
 import struct
 import pytest
-from dualsense_ui.widgets.monitor import parse_input_report
+from dualsense_ui.parser import parse_input_report
 
 
 def _usb_packet(payload_53):
