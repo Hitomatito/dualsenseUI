@@ -7,72 +7,68 @@ on:
 
 jobs:
   deb:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Build .deb
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential debhelper dh-python python3-all python3-setuptools
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential devscripts debhelper dh-python python3-all python3-setuptools
           dpkg-buildpackage -us -uc -b
-      - name: Upload .deb
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: deb-packages
           path: ../dualsense-ui_*.deb
 
   rpm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container:
+      image: fedora:latest
     steps:
       - uses: actions/checkout@v4
       - name: Build .rpm
         run: |
-          sudo apt-get update
-          sudo apt-get install -y rpm python3-setuptools
+          dnf install -y rpm-build python3-setuptools python3-devel 'python3dist(pygobject)' 'python3dist(hidapi)' 'python3dist(evdev)'
           VERSION=${GITHUB_REF_NAME#v}
-          # Create source tarball
           tar czf /tmp/dualsense-ui-${VERSION}.tar.gz \
             --transform "s,^,dualsense-ui-${VERSION}/," \
-            --exclude=.git \
-            --exclude=.github \
-            --exclude=.pytest_cache \
-            --exclude=__pycache__ \
+            --exclude=.git --exclude=.github --exclude=.pytest_cache --exclude=__pycache__ \
             -C $(pwd) .
           mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
           cp /tmp/dualsense-ui-${VERSION}.tar.gz rpmbuild/SOURCES/
           rpmbuild -ba dualsense-ui.spec \
             --define "_topdir $(pwd)/rpmbuild" \
             --define "version ${VERSION}"
-      - name: Upload .rpm
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: rpm-packages
           path: rpmbuild/RPMS/**/*.rpm
 
   flatpak:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
-        with:
-          bundle: dualsense-ui.flatpak
-          manifest-path: flatpak/com.dualsenseui.yml
-          cache-key: flatpak-${{ github.sha }}
-      - name: Upload Flatpak
-        uses: actions/upload-artifact@v4
+      - name: Install flatpak-builder
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq flatpak-builder
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+      - name: Build Flatpak
+        run: |
+          flatpak-builder --user --force-clean --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml
+          flatpak build-bundle build-dir dualsense-ui.flatpak com.dualsenseui.app
+      - uses: actions/upload-artifact@v4
         with:
           name: flatpak
           path: dualsense-ui.flatpak
 
   release:
     needs: [deb, rpm, flatpak]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
       - uses: actions/download-artifact@v4
-      - name: List artifacts
-        run: ls -la deb-packages/ rpm-packages/ flatpak/
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
