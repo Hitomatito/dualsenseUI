@@ -13,7 +13,7 @@ jobs:
       - name: Build .deb
         run: |
           sudo apt-get update
-          sudo apt-get install -y debhelper dh-python python3-all python3-setuptools
+          sudo apt-get install -y build-essential debhelper dh-python python3-all python3-setuptools
           dpkg-buildpackage -us -uc -b
       - name: Upload .deb
         uses: actions/upload-artifact@v4
@@ -28,7 +28,7 @@ jobs:
       - name: Build .rpm
         run: |
           sudo apt-get update
-          sudo apt-get install -y rpm-build python3-setuptools
+          sudo apt-get install -y rpm python3-setuptools
           VERSION=${GITHUB_REF_NAME#v}
           # Create source tarball
           tar czf /tmp/dualsense-ui-${VERSION}.tar.gz \
@@ -51,13 +51,9 @@ jobs:
 
   flatpak:
     runs-on: ubuntu-latest
-    container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-48
-      options: --privileged
     steps:
       - uses: actions/checkout@v4
-      - name: Build Flatpak
-        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
           bundle: dualsense-ui.flatpak
           manifest-path: flatpak/com.dualsenseui.yml
