@@ -18,6 +18,17 @@ dist/
 
 # Flatpak
 .flatpak-builder/
+build-dir/
+
+# Debian packaging
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/*.log
+debian/*.substvars
+
+# RPM packaging
+rpmbuild/
 
 # OS
 .DS_Store

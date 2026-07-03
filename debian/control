@@ -1,0 +1,28 @@
+Source: dualsense-ui
+Section: utils
+Priority: optional
+Maintainer: DualSense UI Contributors
+Build-Depends: debhelper-compat (= 13), dh-python, python3-all, python3-setuptools
+Standards-Version: 4.7.0
+Homepage: https://github.com/Hitomatito/dualsenseUI
+
+Package: dualsense-ui
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends},
+ python3-gi,
+ gir1.2-gtk-4.0,
+ python3-gi-cairo,
+ dualsensectl,
+ python3-hidapi,
+ python3-evdev
+Description: Graphical interface for PlayStation DualSense controllers
+ DualSense UI provides a graphical interface for configuring and
+ monitoring PlayStation DualSense and DualSense Edge controllers on Linux.
+ .
+ Features:
+  * Real-time input monitor (buttons, sticks, triggers, gyro, touchpad)
+  * Lightbar color and brightness control
+  * Microphone and speaker audio settings
+  * Adaptive trigger configuration (7 modes)
+  * Firmware updates
+  * Battery monitoring with animated gauge

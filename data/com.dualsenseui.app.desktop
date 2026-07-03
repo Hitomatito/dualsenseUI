@@ -2,7 +2,7 @@
 Name=DualSense UI
 Comment=Configure PlayStation DualSense controllers
 Exec=dualsense-ui
-Icon=com.dualsenseui.app
+Icon=com.dualsenseui
 Terminal=false
 Type=Application
 Categories=Utility;HardwareSettings;

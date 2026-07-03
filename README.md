@@ -133,10 +133,32 @@ make install          # install locally
 make uninstall        # remove
 ```
 
-## Flatpak
+## Packages
 
-Build and run with Flatpak:
+### Flatpak
 
 ```sh
 make flatpak
 ```
+
+Pre-built Flatpak available on the [Releases page](https://github.com/Hitomatito/dualsenseUI/releases).
+
+### Debian / Ubuntu (.deb)
+
+Requires `debhelper`, `dh-python`, `dualsensectl` (from universe repo).
+
+```sh
+sudo apt install debhelper dh-python dualsensectl
+make deb
+```
+
+### Fedora / RHEL (.rpm)
+
+Requires `rpm-build`, `spectool`, `dualsensectl`.
+
+```sh
+sudo dnf install rpm-build spectool dualsensectl
+make rpm
+```
+
+> **Note:** `dualsensectl` package is available in Debian/Ubuntu (universe) since Trixie/24.10 and in Fedora since F40. If it's not in your distro yet, build from [source](https://github.com/nowrep/dualsensectl).

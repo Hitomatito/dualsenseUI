@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE=1
+
+%:
+	dh $@ --with python3
+
+override_dh_auto_install:
+	dh_auto_install --prefix=/usr
+
+override_dh_install:
+	dh_install
+	# Install desktop file and icons
+	install -Dm644 data/com.dualsenseui.app.desktop \
+		$(CURDIR)/debian/dualsense-ui/usr/share/applications/com.dualsenseui.app.desktop
+	install -Dm644 data/icons/com.dualsenseui.svg \
+		$(CURDIR)/debian/dualsense-ui/usr/share/icons/hicolor/scalable/apps/com.dualsenseui.svg
+	install -Dm644 data/icons/usb-symbolic.svg \
+		$(CURDIR)/debian/dualsense-ui/usr/share/icons/hicolor/symbolic/devices/usb-symbolic.svg
