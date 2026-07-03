@@ -50,7 +50,7 @@ jobs:
           set -ex
           VERSION=${{ github.ref_name }}
           VERSION=${VERSION#v}
-          dnf install -y -q rpm-build python3-setuptools
+          dnf install -y -q rpm-build python3-devel python3-setuptools
           tar czf /tmp/dualsense-ui-${VERSION}.tar.gz \
             --transform "s,^,dualsense-ui-${VERSION}/," \
             --exclude=.git --exclude=.github --exclude=.pytest_cache --exclude=__pycache__ \
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6.7
         with:
           bundle: dualsense-ui.flatpak
           manifest-path: flatpak/com.dualsenseui.yml
