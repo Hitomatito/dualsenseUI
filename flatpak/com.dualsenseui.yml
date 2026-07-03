@@ -1,0 +1,40 @@
+app-id: com.dualsenseui.app
+runtime: org.gnome.Platform
+runtime-version: '48'
+sdk: org.gnome.Sdk
+command: dualsense-ui
+
+finish-args:
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --share=ipc
+  - --device=all
+
+build-options:
+  env:
+    - FLATPAK_DEST=/app
+
+modules:
+  - name: dualsensectl
+    buildsystem: simple
+    build-commands:
+      - meson setup build
+      - ninja -C build
+      - ninja -C build install
+    sources:
+      - type: archive
+        url: https://github.com/nowrep/dualsensectl/archive/v0.7.tar.gz
+        sha256: a615304596925738b12d0a499f31e1fe0cc3653da230edfe7c68637098ce6b72
+
+  - name: dualsense-ui
+    buildsystem: simple
+    build-commands:
+      - pip3 install --prefix=/app . hidapi evdev
+      - mkdir -p /app/share/dualsense-ui
+      - cp data/style.css /app/share/dualsense-ui/style.css
+      - cp -r data/icons /app/share/dualsense-ui/icons
+      - install -Dm644 data/icons/com.dualsenseui.svg /app/share/icons/hicolor/scalable/apps/com.dualsenseui.svg
+      - install -Dm644 data/icons/usb-symbolic.svg /app/share/icons/hicolor/symbolic/devices/usb-symbolic.svg
+    sources:
+      - type: dir
+        path: ..
