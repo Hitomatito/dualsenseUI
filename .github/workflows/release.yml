@@ -13,7 +13,8 @@ jobs:
       - name: Build .deb
         run: |
           set -ex
-          VERSION=${GITHUB_REF_NAME#v}
+          VERSION=${{ github.ref_name }}
+          VERSION=${VERSION#v}
           PKG=dualsense-ui_${VERSION}-1_all
           DEST=/tmp/$PKG
           mkdir -p $DEST/DEBIAN
@@ -46,21 +47,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y rpm python3-setuptools
-          which rpmbuild
-          rpmbuild --version
-          python3 -c "import setuptools; print('OK')"
       - name: Create tarball
         run: |
           VERSION=${{ github.ref_name }}
           VERSION=${VERSION#v}
-          echo "Version: $VERSION"
-          pwd
-          ls -la
           tar czf /tmp/dualsense-ui-${VERSION}.tar.gz \
             --transform "s,^,dualsense-ui-${VERSION}/," \
             --exclude=.git --exclude=.github --exclude=.pytest_cache --exclude=__pycache__ \
             -C $(pwd) .
-          ls -la /tmp/dualsense-ui-${VERSION}.tar.gz
       - name: Build .rpm
         run: |
           VERSION=${{ github.ref_name }}
@@ -69,8 +63,7 @@ jobs:
           cp /tmp/dualsense-ui-${VERSION}.tar.gz rpmbuild/SOURCES/
           rpmbuild -ba dualsense-ui.spec \
             --define "_topdir $(pwd)/rpmbuild" \
-            --define "version ${VERSION}" > /tmp/rpmbuild.log 2>&1 || true
-          cat /tmp/rpmbuild.log
+            --define "version ${VERSION}"
           find rpmbuild -name '*.rpm'
       - uses: actions/upload-artifact@v4
         with:
@@ -81,16 +74,24 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Setup
+      - name: Install flatpak-builder
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq flatpak flatpak-builder
-          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
       - name: Build Flatpak
         run: |
-          flatpak-builder --user --force-clean --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml 2>&1
+          set -ex
+          flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak-builder --user --force-clean --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml > /tmp/flatpak.log 2>&1 || rc=$?
+          cat /tmp/flatpak.log
+          if [ -n "$rc" ] && [ "$rc" -ne 0 ]; then exit $rc; fi
           flatpak build-bundle build-dir dualsense-ui.flatpak com.dualsenseui.app
           ls -la dualsense-ui.flatpak
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-logs
+          path: /tmp/flatpak.log
       - uses: actions/upload-artifact@v4
         with:
           name: flatpak
