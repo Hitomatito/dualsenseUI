@@ -46,12 +46,12 @@ jobs:
       - name: Build .rpm
         run: |
           set -ex
+          exec 2>&1
           VERSION=${{ github.ref_name }}
           VERSION=${VERSION#v}
           sudo apt-get update -qq
           sudo apt-get install -y -qq ruby rpm python3-setuptools
           gem install fpm --no-document
-          # Install to staging dir, then package with fpm
           python3 -m pip install --root=/tmp/staging --prefix=/usr .
           install -Dm644 data/com.dualsenseui.app.desktop /tmp/staging/usr/share/applications/com.dualsenseui.app.desktop
           install -Dm644 data/icons/com.dualsenseui.svg /tmp/staging/usr/share/icons/hicolor/scalable/apps/com.dualsenseui.svg
@@ -75,8 +75,12 @@ jobs:
             --rpm-postun "/usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor &>/dev/null || :" \
             -C /tmp/staging \
             usr
-          mv *.rpm dualsense-ui-${VERSION}-1.noarch.rpm
           ls -la *.rpm
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-logs
+          path: /tmp/rpm.log
       - uses: actions/upload-artifact@v4
         with:
           name: rpm-packages
