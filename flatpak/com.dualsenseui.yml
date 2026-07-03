@@ -1,6 +1,6 @@
 app-id: com.dualsenseui.app
 runtime: org.gnome.Platform
-runtime-version: '48'
+runtime-version: '47'
 sdk: org.gnome.Sdk
 command: dualsense-ui
 
@@ -38,17 +38,15 @@ modules:
     build-options:
       no-network: false
     build-commands:
-      - pip3 install --prefix=/app --no-build-isolation evdev hidapi
+      - python3 -m pip install --prefix=${FLATPAK_DEST} --no-build-isolation evdev hidapi
     sources:
-      - type: pip
-        packages:
-          - evdev
-          - hidapi
+      - type: file
+        path: /dev/null
 
   - name: dualsense-ui
     buildsystem: simple
     build-commands:
-      - pip3 install --prefix=/app --no-build-isolation --no-deps .
+      - python3 -m pip install --prefix=/app --no-build-isolation --no-deps .
       - install -Dm644 data/com.dualsenseui.app.desktop /app/share/applications/com.dualsenseui.app.desktop
       - install -Dm644 data/icons/com.dualsenseui.svg /app/share/icons/hicolor/scalable/apps/com.dualsenseui.svg
       - install -Dm644 data/icons/usb-symbolic.svg /app/share/icons/hicolor/symbolic/devices/usb-symbolic.svg

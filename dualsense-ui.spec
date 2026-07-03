@@ -33,7 +33,7 @@ Features:
 - Battery monitoring with animated gauge
 
 %prep
-%setup -q -n %{appname}
+%setup -q -n %{name}-%{version}
 
 %build
 python3 setup.py build
