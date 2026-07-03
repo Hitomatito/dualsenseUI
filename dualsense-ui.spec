@@ -10,6 +10,7 @@ URL:           https://github.com/Hitomatito/dualsenseUI
 Source0:       %{appname}-%{version}.tar.gz
 
 BuildArch:     noarch
+BuildRequires: python3-devel
 BuildRequires: python3-setuptools
 
 Requires:      python3-gobject
@@ -35,10 +36,10 @@ Features:
 %setup -q -n %{name}-%{version}
 
 %build
-python3 -m pip install --no-build-isolation --no-deps .
+python3 setup.py build
 
 %install
-python3 -m pip install --no-build-isolation --no-deps --prefix=%{_prefix} --root=%{buildroot} .
+python3 setup.py install --prefix=%{_prefix} --root=%{buildroot}
 # Desktop file
 install -Dm644 data/com.dualsenseui.app.desktop \
   %{buildroot}%{_datadir}/applications/com.dualsenseui.app.desktop
@@ -66,17 +67,10 @@ python3 -m pytest tests/ -v --tb=short || :
 %license LICENSE
 %{_bindir}/dualsense-ui
 %{python3_sitelib}/dualsense_ui/
-%dir %{_datadir}/applications/
 %{_datadir}/applications/com.dualsenseui.app.desktop
-%dir %{_datadir}/icons/hicolor/scalable/apps/
 %{_datadir}/icons/hicolor/scalable/apps/com.dualsenseui.svg
-%dir %{_datadir}/icons/hicolor/symbolic/devices/
 %{_datadir}/icons/hicolor/symbolic/devices/usb-symbolic.svg
-%dir %{_datadir}/dualsense-ui/
-%dir %{_datadir}/dualsense-ui/icons/
-%{_datadir}/dualsense-ui/style.css
-%{_datadir}/dualsense-ui/icons/com.dualsenseui.svg
-%{_datadir}/dualsense-ui/icons/usb-symbolic.svg
+%{_datadir}/dualsense-ui/
 
 %changelog
 * Thu Jul 02 2026 DualSense UI Contributors - 1.0.0-1

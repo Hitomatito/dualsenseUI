@@ -41,50 +41,37 @@ jobs:
 
   rpm:
     runs-on: ubuntu-24.04
+    container:
+      image: fedora:41
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - name: Install git and checkout
+        run: |
+          dnf install -y -q git python3-setuptools
+          git clone https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git .
+          git checkout ${{ github.sha }}
       - name: Build .rpm
         run: |
           set -ex
-          exec 2>&1
           VERSION=${{ github.ref_name }}
           VERSION=${VERSION#v}
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq build-essential ruby ruby-dev rpm python3-setuptools
-          gem install fpm --no-document
-          python3 -m pip install --root=/tmp/staging --prefix=/usr .
-          install -Dm644 data/com.dualsenseui.app.desktop /tmp/staging/usr/share/applications/com.dualsenseui.app.desktop
-          install -Dm644 data/icons/com.dualsenseui.svg /tmp/staging/usr/share/icons/hicolor/scalable/apps/com.dualsenseui.svg
-          install -Dm644 data/icons/usb-symbolic.svg /tmp/staging/usr/share/icons/hicolor/symbolic/devices/usb-symbolic.svg
-          fpm -s dir -t rpm \
-            --name dualsense-ui \
-            --version $VERSION \
-            --iteration 1 \
-            --architecture all \
-            --maintainer "DualSense UI Contributors" \
-            --url "https://github.com/Hitomatito/dualsenseUI" \
-            --license "GPL-3.0-or-later" \
-            --description "Graphical interface for PlayStation DualSense controllers" \
-            --depends python3-gobject \
-            --depends gtk4 \
-            --depends python3-gobject-cairo \
-            --depends dualsensectl \
-            --depends python3-hidapi \
-            --depends python3-evdev \
-            --rpm-postinst "/usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor &>/dev/null || :" \
-            --rpm-postun "/usr/bin/gtk-update-icon-cache /usr/share/icons/hicolor &>/dev/null || :" \
-            -C /tmp/staging \
-            usr
-          ls -la *.rpm
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: rpm-logs
-          path: /tmp/rpm.log
+          dnf install -y -q rpm-build python3-setuptools
+          tar czf /tmp/dualsense-ui-${VERSION}.tar.gz \
+            --transform "s,^,dualsense-ui-${VERSION}/," \
+            --exclude=.git --exclude=.github --exclude=.pytest_cache --exclude=__pycache__ \
+            -C $(pwd) .
+          mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          cp /tmp/dualsense-ui-${VERSION}.tar.gz rpmbuild/SOURCES/
+          rpmbuild -ba dualsense-ui.spec \
+            --define "_topdir $(pwd)/rpmbuild" \
+            --define "version ${VERSION}"
+          find rpmbuild -name '*.rpm'
       - uses: actions/upload-artifact@v4
         with:
           name: rpm-packages
-          path: ./*.rpm
+          path: rpmbuild/RPMS/**/*.rpm
 
   flatpak:
     runs-on: ubuntu-24.04
