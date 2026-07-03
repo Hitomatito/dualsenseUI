@@ -7,7 +7,7 @@ Summary:       Graphical interface for PlayStation DualSense controllers
 
 License:       GPL-3.0-or-later
 URL:           https://github.com/Hitomatito/dualsenseUI
-Source0:       %{url}/archive/v%{version}/%{appname}-v%{version}.tar.gz
+Source0:       %{appname}-%{version}.tar.gz
 
 BuildArch:     noarch
 BuildRequires: python3-devel

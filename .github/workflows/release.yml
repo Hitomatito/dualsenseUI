@@ -13,7 +13,7 @@ jobs:
       - name: Build .deb
         run: |
           sudo apt-get update
-          sudo apt-get install -y debhelper dh-python python3-all
+          sudo apt-get install -y debhelper dh-python python3-all python3-setuptools
           dpkg-buildpackage -us -uc -b
       - name: Upload .deb
         uses: actions/upload-artifact@v4
@@ -28,11 +28,21 @@ jobs:
       - name: Build .rpm
         run: |
           sudo apt-get update
-          sudo apt-get install -y rpm-build
+          sudo apt-get install -y rpm-build python3-setuptools
+          VERSION=${GITHUB_REF_NAME#v}
+          # Create source tarball
+          tar czf /tmp/dualsense-ui-${VERSION}.tar.gz \
+            --transform "s,^,dualsense-ui-${VERSION}/," \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude=.pytest_cache \
+            --exclude=__pycache__ \
+            -C $(pwd) .
           mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          cp /tmp/dualsense-ui-${VERSION}.tar.gz rpmbuild/SOURCES/
           rpmbuild -ba dualsense-ui.spec \
             --define "_topdir $(pwd)/rpmbuild" \
-            --define "_sourcedir $(pwd)"
+            --define "version ${VERSION}"
       - name: Upload .rpm
         uses: actions/upload-artifact@v4
         with:
