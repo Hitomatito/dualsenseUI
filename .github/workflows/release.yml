@@ -163,5 +163,5 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             deb-packages/*.deb
-            rpm-packages/*.rpm
+            rpm-packages/**/*.rpm
             flatpak/*.flatpak
