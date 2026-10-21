@@ -149,6 +149,7 @@ jobs:
           tag_name: v${{ env.VERSION }}
           name: DualSense UI v${{ env.VERSION }}
           draft: false
+          generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
             deb-packages/*.deb
