@@ -221,7 +221,7 @@ class TestErrors:
     def test_missing_binary(self):
         with patch('dualsense_ui.backend.subprocess.run') as mock:
             mock.side_effect = FileNotFoundError()
-            with pytest.raises(DualsenseError, match='no encontrado'):
+            with pytest.raises(DualsenseError, match='not found'):
                 _run(['test'])
 
     def test_timeout(self):
@@ -235,4 +235,12 @@ class TestErrors:
             mock.return_value.returncode = 1
             mock.return_value.stderr = 'Some error'
             with pytest.raises(DualsenseError, match='Some error'):
+                _run(['test'])
+
+    def test_nonzero_returncode_without_message(self):
+        with patch('dualsense_ui.backend.subprocess.run') as mock:
+            mock.return_value.returncode = 2
+            mock.return_value.stderr = ''
+            mock.return_value.stdout = ''
+            with pytest.raises(DualsenseError, match='status 2'):
                 _run(['test'])

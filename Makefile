@@ -14,7 +14,7 @@ install:
 		~/.local/share/icons/hicolor/scalable/apps \
 		~/.local/share/icons/hicolor/symbolic/devices
 	cp data/com.dualsenseui.app.desktop ~/.local/share/applications/
-	cp data/icons/com.dualsenseui.svg ~/.local/share/icons/hicolor/scalable/apps/
+	cp data/icons/com.dualsenseui.app.svg ~/.local/share/icons/hicolor/scalable/apps/
 	cp data/icons/usb-symbolic.svg ~/.local/share/icons/hicolor/symbolic/devices/
 	@echo "Installed. Run: dualsense-ui"
 
@@ -34,7 +34,8 @@ check:
 	python3 -m pytest tests/ -v --tb=short
 
 flatpak:
-	flatpak-builder --force-clean build-dir flatpak/com.dualsenseui.yml
+	flatpak-builder --user --force-clean --repo=repo --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml
+	flatpak build-bundle repo dualsense-ui.flatpak com.dualsenseui.app
 
 deb:
 	dpkg-buildpackage -us -uc -b

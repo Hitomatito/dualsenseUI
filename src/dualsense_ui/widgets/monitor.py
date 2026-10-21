@@ -1,11 +1,14 @@
 import gi
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, GLib, Gdk
+import logging
 import math
 import cairo
 
 from ..parser import parse_input_report
 
+
+log = logging.getLogger(__name__)
 
 STICK_RADIUS = 55
 DOT_RADIUS = 5
@@ -303,20 +306,20 @@ class InputMonitorWidget(Gtk.Box):
             for path in evdev.list_devices():
                 try:
                     inp = evdev.InputDevice(path)
-                except Exception as e:
+                except Exception:
                     continue
                 is_ds = inp.info.vendor == 0x054c and inp.info.product in pids
                 if is_ds:
                     try:
                         inp.grab()
                         self._grabbed_devices.append(inp)
-                        print(f'GRAB: grabado {path} ({inp.name})', flush=True)
+                        log.debug('grabbed touchpad device %s (%s)', path, inp.name)
                     except Exception as e:
-                        print(f'GRAB: FALLO grab {path}: {e}', flush=True)
+                        log.debug('could not grab %s: %s', path, e)
                         inp.close()
-            print(f'GRAB: total dispositivos agarrados={len(self._grabbed_devices)}', flush=True)
+            log.debug('%d touchpad device(s) grabbed', len(self._grabbed_devices))
         except Exception as e:
-            print(f'GRAB: error general: {e}', flush=True)
+            log.debug('touchpad grab failed: %s', e)
 
     def _ungrab_touchpad(self):
         for inp in self._grabbed_devices:

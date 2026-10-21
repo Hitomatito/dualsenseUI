@@ -9,7 +9,6 @@ finish-args:
   - --socket=wayland
   - --share=ipc
   - --device=all
-  - --filesystem=host-os
 
 modules:
   - name: libhidapi
@@ -17,31 +16,33 @@ modules:
     builddir: true
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
+      # CMake 4.x removed compatibility with cmake_minimum_required < 3.5,
+      # which hidapi 0.14.0 still declares.
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     sources:
       - type: archive
         url: https://github.com/libusb/hidapi/archive/hidapi-0.14.0.tar.gz
-        sha256: a57141241ee8e9537af3dd32d978b27086866d101344bfae7e2955b9cc6f7108
+        sha256: a5714234abe6e1f53647dd8cba7d69f65f71c558b7896ed218864ffcf405bcbd
 
   - name: dualsensectl
-    buildsystem: simple
-    build-commands:
-      - meson setup build
-      - ninja -C build
-      - ninja -C build install
+    buildsystem: meson
     sources:
       - type: archive
         url: https://github.com/nowrep/dualsensectl/archive/v0.7.tar.gz
         sha256: a615304596925738b12d0a499f31e1fe0cc3653da230edfe7c68637098ce6b72
 
   - name: dualsense-ui
-    build-options:
-      no-network: false
     buildsystem: simple
+    build-options:
+      # pip needs to reach PyPI to fetch the Python deps; flatpak build
+      # sandboxes have no network unless it is shared explicitly.
+      build-args:
+        - --share=network
     build-commands:
-      - python3 -m pip install --prefix=/app --no-build-isolation evdev hidapi
-      - python3 -m pip install --prefix=/app --no-build-isolation --no-deps .
+      - python3 -m pip install --prefix=/app --no-build-isolation --no-warn-script-location evdev==1.9.2 hidapi==0.15.0
+      - python3 -m pip install --prefix=/app --no-build-isolation --no-deps --no-warn-script-location .
       - install -Dm644 data/com.dualsenseui.app.desktop /app/share/applications/com.dualsenseui.app.desktop
-      - install -Dm644 data/icons/com.dualsenseui.svg /app/share/icons/hicolor/scalable/apps/com.dualsenseui.svg
+      - install -Dm644 data/icons/com.dualsenseui.app.svg /app/share/icons/hicolor/scalable/apps/com.dualsenseui.app.svg
       - install -Dm644 data/icons/usb-symbolic.svg /app/share/icons/hicolor/symbolic/devices/usb-symbolic.svg
     sources:
       - type: dir

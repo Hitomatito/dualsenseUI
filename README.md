@@ -62,6 +62,21 @@ sudo eopkg install python3-gobject gtk4-devel cairo-devel hidapi-devel pkg-confi
 
 ## Install
 
+### Pre-built packages
+
+Download the `.deb`, `.rpm` or `.flatpak` from the [latest release](https://github.com/Hitomatito/dualsenseUI/releases/latest).
+
+```sh
+# Debian / Ubuntu
+sudo apt install ./dualsense-ui_*.deb
+
+# Fedora / RHEL
+sudo dnf install ./dualsense-ui-*.rpm
+
+# Flatpak (any distro)
+flatpak install --user ./dualsense-ui.flatpak
+```
+
 ### From source
 
 ```sh

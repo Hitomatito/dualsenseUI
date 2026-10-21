@@ -1,3 +1,12 @@
+dualsense-ui (1.0.1-1) unstable; urgency=medium
+
+  * Fix Flatpak packaging (wrong libhidapi checksum) and publish all
+    release assets (.deb, .rpm, .flatpak) from CI.
+  * Single-source the application version.
+  * Report dualsensectl failures instead of ignoring empty stderr.
+
+ -- DualSense UI Contributors <dualsense-ui@lists.github>  Wed, 21 Oct 2026 00:00:00 +0000
+
 dualsense-ui (1.0.0-1) unstable; urgency=medium
 
   * Initial release.

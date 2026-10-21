@@ -4,106 +4,138 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión a publicar, sin la v delante (ej: 1.0.1)'
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   deb:
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve version
+        env:
+          RAW_VERSION: ${{ inputs.version || github.ref_name }}
+        run: |
+          VERSION="${RAW_VERSION#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
       - name: Build .deb
         run: |
-          set -ex
-          VERSION=${{ github.ref_name }}
-          VERSION=${VERSION#v}
-          PKG=dualsense-ui_${VERSION}-1_all
-          DEST=/tmp/$PKG
-          mkdir -p $DEST/DEBIAN
-          python3 -m pip install --root=$DEST --prefix=/usr .
-          install -Dm644 data/com.dualsenseui.app.desktop $DEST/usr/share/applications/com.dualsenseui.app.desktop
-          install -Dm644 data/icons/com.dualsenseui.svg $DEST/usr/share/icons/hicolor/scalable/apps/com.dualsenseui.svg
-          install -Dm644 data/icons/usb-symbolic.svg $DEST/usr/share/icons/hicolor/symbolic/devices/usb-symbolic.svg
-          cat > $DEST/DEBIAN/control <<-EOF
+          set -euo pipefail
+          PKG="dualsense-ui_${VERSION}-1_all"
+          DEST="/tmp/$PKG"
+          mkdir -p "$DEST/DEBIAN"
+          python3 -m pip install --root="$DEST" --prefix=/usr --no-warn-script-location .
+          install -Dm644 data/com.dualsenseui.app.desktop "$DEST/usr/share/applications/com.dualsenseui.app.desktop"
+          install -Dm644 data/icons/com.dualsenseui.app.svg "$DEST/usr/share/icons/hicolor/scalable/apps/com.dualsenseui.app.svg"
+          install -Dm644 data/icons/usb-symbolic.svg "$DEST/usr/share/icons/hicolor/symbolic/devices/usb-symbolic.svg"
+          cat > "$DEST/DEBIAN/control" <<-EOF
           Package: dualsense-ui
           Version: ${VERSION}-1
           Architecture: all
-          Maintainer: DualSense UI Contributors
+          Maintainer: DualSense UI Contributors <dualsense-ui@users.noreply.github.com>
           Depends: python3, python3-gi, gir1.2-gtk-4.0, python3-gi-cairo, dualsensectl, python3-hidapi, python3-evdev
           Section: utils
           Priority: optional
+          Homepage: https://github.com/Hitomatito/dualsenseUI
           Description: Graphical interface for PlayStation DualSense controllers
+           Configure and monitor DualSense and DualSense Edge controllers on Linux:
+           lightbar, adaptive triggers, audio, battery and firmware updates.
           EOF
-          dpkg-deb --build --root-owner-group $DEST
-          mv /tmp/${PKG}.deb .
+          dpkg-deb --build --root-owner-group "$DEST"
+          mv "/tmp/${PKG}.deb" .
+          test -f "dualsense-ui_${VERSION}-1_all.deb"
+
       - uses: actions/upload-artifact@v4
         with:
           name: deb-packages
           path: dualsense-ui_*.deb
+          if-no-files-found: error
 
   rpm:
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     container:
       image: fedora:41
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve version
+        env:
+          RAW_VERSION: ${{ inputs.version || github.ref_name }}
+        run: |
+          VERSION="${RAW_VERSION#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
       - name: Build .rpm
         run: |
-          set -ex
-          VERSION=${{ github.ref_name }}
-          VERSION=${VERSION#v}
-          dnf install -y -q rpm-build python3-devel python3-setuptools
-          tar czf /tmp/dualsense-ui-${VERSION}.tar.gz \
+          set -euo pipefail
+          dnf install -y -q rpm-build python3-devel python3-setuptools python3-pytest
+          sed -i "s/^Version:.*/Version:        ${VERSION}/" dualsense-ui.spec
+          tar czf "/tmp/dualsense-ui-${VERSION}.tar.gz" \
             --transform "s,^,dualsense-ui-${VERSION}/," \
             --exclude=.git --exclude=.github --exclude=.pytest_cache --exclude=__pycache__ \
-            -C $(pwd) .
+            -C "$(pwd)" .
           mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-          cp /tmp/dualsense-ui-${VERSION}.tar.gz rpmbuild/SOURCES/
+          cp "/tmp/dualsense-ui-${VERSION}.tar.gz" rpmbuild/SOURCES/
           rpmbuild -ba dualsense-ui.spec \
             --define "_topdir $(pwd)/rpmbuild" \
-            --define "version ${VERSION}" > /tmp/rpmbuild.log 2>&1 || true
-          cat /tmp/rpmbuild.log
-          find rpmbuild -name '*.rpm'
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: rpm-logs
-          path: /tmp/rpmbuild.log
+            --define "version ${VERSION}"
+          find rpmbuild/RPMS -name '*.rpm' -print -quit | grep -q .
+
       - uses: actions/upload-artifact@v4
         with:
           name: rpm-packages
           path: rpmbuild/RPMS/**/*.rpm
+          if-no-files-found: error
 
   flatpak:
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve version
+        env:
+          RAW_VERSION: ${{ inputs.version || github.ref_name }}
+        run: |
+          VERSION="${RAW_VERSION#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
       - name: Setup flatpak
         run: |
+          set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq flatpak flatpak-builder
           flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
       - name: Build Flatpak
         run: |
-          echo "=== Checking flatpak setup ==="
-          flatpak --version
-          flatpak-builder --version
-          flatpak remotes --user
-          echo "=== Trying flatpak install ==="
-          flatpak install --user --noninteractive flathub org.gnome.Platform//49 org.gnome.Sdk//49 2>&1 || echo "Install skipped/maybe already present"
-          echo "=== Running flatpak-builder ==="
-          flatpak-builder --user --force-clean --install-deps-from=flathub build-dir flatpak/com.dualsenseui.yml 2>&1 | tee /tmp/flatpak.log; rc=${PIPESTATUS[0]}
-          echo "flatpak-builder exit code: $rc"
-          if [ $rc -ne 0 ]; then exit $rc; fi
-          flatpak build-bundle build-dir dualsense-ui.flatpak com.dualsenseui.app
+          set -euo pipefail
+          flatpak-builder --user --force-clean --disable-rofiles-fuse \
+            --repo=repo --install-deps-from=flathub \
+            build-dir flatpak/com.dualsenseui.yml
+          flatpak build-bundle repo dualsense-ui.flatpak com.dualsenseui.app
           ls -la dualsense-ui.flatpak
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: flatpak-logs
-          path: /tmp/flatpak.log
+
       - uses: actions/upload-artifact@v4
         with:
           name: flatpak
           path: dualsense-ui.flatpak
+          if-no-files-found: error
 
   release:
     needs: [deb, rpm, flatpak]
@@ -111,11 +143,25 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Resolve version
+        env:
+          RAW_VERSION: ${{ inputs.version || github.ref_name }}
+        run: |
+          VERSION="${RAW_VERSION#v}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
       - uses: actions/download-artifact@v4
+
+      - name: List assets
+        run: find . -type f -not -name '*.yml' | sort
+
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ env.VERSION }}
+          name: DualSense UI v${{ env.VERSION }}
+          draft: false
+          fail_on_unmatched_files: true
           files: |
             deb-packages/*.deb
             rpm-packages/*.rpm
-            flatpak/dualsense-ui.flatpak
-          generate_release_notes: true
+            flatpak/*.flatpak

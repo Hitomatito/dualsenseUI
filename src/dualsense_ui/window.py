@@ -2,6 +2,7 @@ import os
 import gi
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, GLib, Gio, Gdk, GdkPixbuf
+from . import __version__
 from .backend import list_devices
 from .widgets.lightbar import LightbarWidget
 from .widgets.audio import AudioWidget
@@ -21,7 +22,7 @@ class DualsenseWindow(Gtk.ApplicationWindow):
 
         self.set_title('DualSense Controller')
         self.set_default_size(700, 600)
-        self.set_icon_name('com.dualsenseui')
+        self.set_icon_name('com.dualsenseui.app')
 
         self._device_cache = []
         self._last_device_ids = set()
@@ -199,7 +200,7 @@ class DualsenseWindow(Gtk.ApplicationWindow):
         about = Gtk.AboutDialog()
         about.set_transient_for(self)
         about.set_program_name('DualSense UI')
-        about.set_version('1.0.0')
+        about.set_version(__version__)
         about.set_comments(
             'Graphical interface for configuring and monitoring '
             'PlayStation DualSense and DualSense Edge controllers on Linux.\n\n'
@@ -208,15 +209,16 @@ class DualsenseWindow(Gtk.ApplicationWindow):
             'via dualsensectl.'
         )
         about.set_copyright('© 2026 DualSense UI Contributors')
-        about.set_website('https://github.com/nowrep/dualsensectl')
-        about.set_website_label('dualsensectl (GitHub)')
+        about.set_website('https://github.com/Hitomatito/dualsenseUI')
+        about.set_website_label('DualSense UI (GitHub)')
+        about.add_link('dualsensectl backend', 'https://github.com/nowrep/dualsensectl')
         about.set_authors([
             'DualSense UI Contributors',
             'dualsensectl — nowrep',
         ])
         about.set_license_type(Gtk.License.GPL_3_0)
 
-        svg_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'icons', 'com.dualsenseui.svg')
+        svg_path = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'icons', 'com.dualsenseui.app.svg')
         icon_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(svg_path, 128, 128)
         pad = 20
         w = icon_pixbuf.get_width() + pad * 2

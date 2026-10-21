@@ -19,8 +19,11 @@ dist/
 # Flatpak
 .flatpak-builder/
 build-dir/
+repo/
+*.flatpak
 
 # Debian packaging
+*.deb
 debian/.debhelper/
 debian/debhelper-build-stamp
 debian/files

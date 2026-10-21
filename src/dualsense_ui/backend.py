@@ -1,6 +1,5 @@
 import subprocess
 import re
-import shutil
 from enum import Enum
 
 
@@ -60,14 +59,17 @@ def _run(args, device=None, timeout=5) -> str:
             timeout=timeout,
         )
     except FileNotFoundError:
-        raise DualsenseError(f'{BINARY} no encontrado. Instálalo primero.')
+        raise DualsenseError(f'{BINARY} not found. Install it first.')
     except subprocess.TimeoutExpired:
-        raise DualsenseError('Comando timed out')
+        raise DualsenseError(f'{BINARY} timed out after {timeout}s')
 
     if result.returncode != 0:
-        err = result.stderr.strip() or result.stdout.strip()
-        if err:
-            raise DualsenseError(err)
+        err = (
+            result.stderr.strip()
+            or result.stdout.strip()
+            or f'{BINARY} exited with status {result.returncode}'
+        )
+        raise DualsenseError(err)
 
     return result.stdout.strip()
 

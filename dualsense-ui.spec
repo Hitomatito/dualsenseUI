@@ -1,7 +1,7 @@
 %global appname dualsense-ui
 
 Name:          dualsense-ui
-Version:       1.0.0
+Version:       1.0.1
 Release:       1%{?dist}
 Summary:       Graphical interface for PlayStation DualSense controllers
 
@@ -12,6 +12,7 @@ Source0:       %{appname}-%{version}.tar.gz
 BuildArch:     noarch
 BuildRequires: python3-devel
 BuildRequires: python3-setuptools
+BuildRequires: python3-pytest
 
 Requires:      python3-gobject
 Requires:      python3-gobject-cairo
@@ -44,8 +45,8 @@ python3 setup.py install --prefix=%{_prefix} --root=%{buildroot}
 install -Dm644 data/com.dualsenseui.app.desktop \
   %{buildroot}%{_datadir}/applications/com.dualsenseui.app.desktop
 # Icons
-install -Dm644 data/icons/com.dualsenseui.svg \
-  %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/com.dualsenseui.svg
+install -Dm644 data/icons/com.dualsenseui.app.svg \
+  %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/com.dualsenseui.app.svg
 install -Dm644 data/icons/usb-symbolic.svg \
   %{buildroot}%{_datadir}/icons/hicolor/symbolic/devices/usb-symbolic.svg
 # Data files
@@ -54,7 +55,7 @@ cp data/style.css %{buildroot}%{_datadir}/dualsense-ui/style.css
 cp -r data/icons %{buildroot}%{_datadir}/dualsense-ui/icons
 
 %check
-python3 -m pytest tests/ -v --tb=short || :
+python3 -m pytest tests/ -v --tb=short
 
 %post
 %{_bindir}/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
@@ -68,10 +69,15 @@ python3 -m pytest tests/ -v --tb=short || :
 %{_bindir}/dualsense-ui
 %{python3_sitelib}/dualsense_ui/
 %{_datadir}/applications/com.dualsenseui.app.desktop
-%{_datadir}/icons/hicolor/scalable/apps/com.dualsenseui.svg
+%{_datadir}/icons/hicolor/scalable/apps/com.dualsenseui.app.svg
 %{_datadir}/icons/hicolor/symbolic/devices/usb-symbolic.svg
 %{_datadir}/dualsense-ui/
 
 %changelog
+* Wed Oct 21 2026 DualSense UI Contributors - 1.0.1-1
+- Fix Flatpak build (wrong libhidapi checksum)
+- Publish .deb, .rpm and .flatpak assets from the release workflow
+- Single-source the version number and run tests during the RPM build
+
 * Thu Jul 02 2026 DualSense UI Contributors - 1.0.0-1
 - Initial release
