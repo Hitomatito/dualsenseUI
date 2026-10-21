@@ -68,6 +68,7 @@ python3 -m pytest tests/ -v --tb=short
 %license LICENSE
 %{_bindir}/dualsense-ui
 %{python3_sitelib}/dualsense_ui/
+%{python3_sitelib}/dualsense_ui-*.egg-info/
 %{_datadir}/applications/com.dualsenseui.app.desktop
 %{_datadir}/icons/hicolor/scalable/apps/com.dualsenseui.app.svg
 %{_datadir}/icons/hicolor/symbolic/devices/usb-symbolic.svg
