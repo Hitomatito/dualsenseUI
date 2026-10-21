@@ -3,10 +3,18 @@
 export DH_VERBOSE=1
 
 %:
-	dh $@ --with python3
+	dh $@ --with python3 --buildsystem=pybuild
 
-override_dh_auto_install:
-	dh_auto_install --prefix=/usr
+# The Makefile in the project root is a developer helper (it runs
+# "pip install --user -e ."), so debhelper must not use it.
+override_dh_auto_configure:
+	:
+
+override_dh_auto_build:
+	:
+
+override_dh_auto_test:
+	python3 -m pytest tests/ -v --tb=short
 
 override_dh_install:
 	dh_install

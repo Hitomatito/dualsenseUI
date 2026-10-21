@@ -32,32 +32,21 @@ jobs:
           VERSION="${RAW_VERSION#v}"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            debhelper dh-python python3-all python3-setuptools \
+            python3-pytest dpkg-dev fakeroot
+
       - name: Build .deb
         run: |
           set -euo pipefail
-          PKG="dualsense-ui_${VERSION}-1_all"
-          DEST="/tmp/$PKG"
-          mkdir -p "$DEST/DEBIAN"
-          python3 -m pip install --root="$DEST" --prefix=/usr --no-warn-script-location .
-          install -Dm644 data/com.dualsenseui.app.desktop "$DEST/usr/share/applications/com.dualsenseui.app.desktop"
-          install -Dm644 data/icons/com.dualsenseui.app.svg "$DEST/usr/share/icons/hicolor/scalable/apps/com.dualsenseui.app.svg"
-          install -Dm644 data/icons/usb-symbolic.svg "$DEST/usr/share/icons/hicolor/symbolic/devices/usb-symbolic.svg"
-          cat > "$DEST/DEBIAN/control" <<-EOF
-          Package: dualsense-ui
-          Version: ${VERSION}-1
-          Architecture: all
-          Maintainer: DualSense UI Contributors <dualsense-ui@users.noreply.github.com>
-          Depends: python3, python3-gi, gir1.2-gtk-4.0, python3-gi-cairo, dualsensectl, python3-hidapi, python3-evdev
-          Section: utils
-          Priority: optional
-          Homepage: https://github.com/Hitomatito/dualsenseUI
-          Description: Graphical interface for PlayStation DualSense controllers
-           Configure and monitor DualSense and DualSense Edge controllers on Linux:
-           lightbar, adaptive triggers, audio, battery and firmware updates.
-          EOF
-          dpkg-deb --build --root-owner-group "$DEST"
-          mv "/tmp/${PKG}.deb" .
-          test -f "dualsense-ui_${VERSION}-1_all.deb"
+          # Keep the Debian changelog in sync with the released version.
+          sed -i "1s/^dualsense-ui ([^)]*)/dualsense-ui (${VERSION})/" debian/changelog
+          dpkg-buildpackage -b -us -uc
+          mv "../dualsense-ui_${VERSION}_all.deb" .
+          test -f "dualsense-ui_${VERSION}_all.deb"
 
       - uses: actions/upload-artifact@v4
         with:
